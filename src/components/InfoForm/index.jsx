@@ -1,11 +1,22 @@
-import { useState } from "react"
+import { useContext, useEffect, useState } from "react"
+import { GlobalContext } from "../../contexts/global"
+import { instance } from "../../providers/axios"
 import { StyledForm } from "../StyledComponents/StyledForm"
 
 
 
 const InfoForm = () => {
 
-    const [value, setValue] = useState(0)
+    const { anticipationContext } = useContext(GlobalContext)
+
+    const { 
+        setTomorrowValue,
+        setTenDaysValue,
+        setThirdyDaysValue,
+        setNinetyDaysValue
+    } = anticipationContext
+
+    const [value, setValue] = useState(1000)
     const [installments, setinstallments]  = useState(1)
     const [mdr, setMdr] = useState(0)
 
@@ -13,6 +24,10 @@ const InfoForm = () => {
 
         if(state === "value"){
             setValue(e.target.value)
+
+            if (e.target.value < 1000) {
+                setValue(1000)
+            }
         }
         else if(state === "installments"){
             
@@ -28,9 +43,36 @@ const InfoForm = () => {
         }
         else {
             setMdr(e.target.value)
+
+            if(e.target.value === ""){
+                setMdr(0)
+            }
+            else if(e.target.value > 100){
+                setMdr(100)
+            }
         }
 
     }
+
+    useEffect(() => {
+
+        const apiRequestData = {
+            amount: value,
+            installments,
+            mdr,
+            days: [1, 10, 30, 90]
+        }
+
+        instance.post("", apiRequestData)
+        .then((res) => {
+            setTomorrowValue(res.data["1"])
+            setTenDaysValue(res.data["10"])
+            setThirdyDaysValue(res.data["30"])
+            setNinetyDaysValue(res.data["90"])
+        })
+        .catch((err) => {console.log(err)})
+
+    }, [value, installments, mdr])
 
     return(
         <>
